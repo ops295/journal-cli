@@ -16,7 +16,7 @@ A cross-platform terminal-based daily journaling application written in Go.
 
 ### Build
 ```bash
-go build -o journal cmd/journal/main.go
+make build
 ```
 
 ### Run
