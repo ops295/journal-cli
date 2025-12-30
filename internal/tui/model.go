@@ -43,6 +43,10 @@ type Model struct {
 	SelectedBacklog map[int]bool // Index in Entry.Backlog -> true if selected
 	TodoMode        bool         // true if adding a todo, false if reviewing backlog
 
+	// Todos menu when opening an existing entry to avoid navigation deadlocks
+	TodosMenuActive bool
+	TodosMenuCursor int
+
 	Err error
 }
 

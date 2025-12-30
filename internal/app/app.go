@@ -71,8 +71,35 @@ func Run() {
 	}
 
 	// 5. Initialize Entry
-	entry := domain.NewJournalEntry(now, "")
-	entry.Backlog = backlog
+	var entry *domain.JournalEntry
+
+	// If today's journal file exists, load it and start in edit mode
+	editFields := false
+	if fs.Exists(todayFile) {
+		data, err := fs.ReadFile(todayFile)
+		if err != nil {
+			fmt.Printf("Warning: could not read today's file: %v\n", err)
+			entry = domain.NewJournalEntry(now, "")
+			entry.Backlog = backlog
+		} else {
+			parsed, err := markdown.ParseMarkdown(data)
+			if err != nil {
+				fmt.Printf("Warning: could not parse today's file, starting fresh: %v\n", err)
+				entry = domain.NewJournalEntry(now, "")
+				entry.Backlog = backlog
+			} else {
+				// Use parsed entry as starting point
+				entry = parsed
+				// Ensure Backlog from yesterday is present too (merge if missing)
+				if len(entry.Backlog) == 0 {
+					entry.Backlog = backlog
+				}
+			}
+		}
+	} else {
+		entry = domain.NewJournalEntry(now, "")
+		entry.Backlog = backlog
+	}
 
 	// 6. Stats
 	s, err := stats.GetStats(journalDir)
@@ -81,7 +108,110 @@ func Run() {
 	}
 
 	// 7. Initialize TUI
+	// If today's file existed and was parsed, prompt the user whether to edit it
+	// or start fresh. Offer an option to edit fields (mood/energy/highlight) directly.
+	if fs.Exists(todayFile) {
+		// Prompt the user
+		fmt.Printf("Today's journal exists at %s.\n", todayFile)
+		fmt.Printf("[Enter] Edit full entry  |  f Edit mood/energy/highlight  |  n Start fresh\n")
+		fmt.Printf("Choose an option: ")
+		var resp string
+		_, err := fmt.Scanln(&resp)
+		if err != nil {
+			// Treat empty input (enter) as default edit
+			resp = ""
+		}
+
+		switch resp {
+		case "n", "N":
+			// Start fresh: override parsed entry with a new one but keep backlog
+			entry = domain.NewJournalEntry(now, "")
+			entry.Backlog = backlog
+		case "f", "F":
+			// Edit fields: ensure entry is used but start at Mood input
+			editFields = true
+		default:
+			// Default: edit full entry (do nothing)
+		}
+	}
+
 	model := tui.NewModel(cfg, templates, entry, s)
+
+	// If we loaded an existing entry (from today's file), initialize the UI
+	// so user can edit rather than starting a fresh flow.
+	if entry != nil && entry.Template != "" {
+		// select template in list
+		for i, t := range templates {
+			if t.Name == entry.Template {
+				model.TemplateCursor = i
+				break
+			}
+		}
+
+		// populate inputs with existing values
+		model.MoodInput.SetValue(entry.Mood)
+		model.EnergyInput.SetValue(entry.Energy)
+		model.HighlightInput.SetValue(entry.Highlight)
+
+		// If user chose to edit fields, force start at Mood
+		if editFields {
+			model.CurrentStep = tui.StepMood
+			model.MoodInput.Focus()
+		} else {
+			// Determine starting step: find first missing field
+			switch {
+			case entry.Template == "":
+				model.CurrentStep = tui.StepSelectTemplate
+				// focus handled by NewModel defaults
+			case entry.Mood == "":
+				model.CurrentStep = tui.StepMood
+				model.MoodInput.Focus()
+			case entry.Energy == "":
+				model.CurrentStep = tui.StepEnergy
+				model.EnergyInput.Focus()
+			case entry.Highlight == "":
+				model.CurrentStep = tui.StepHighlight
+				model.HighlightInput.Focus()
+			default:
+				// If todos/questions have missing data, jump accordingly
+				if len(entry.Todos) == 0 && len(entry.Backlog) >= 0 {
+					model.CurrentStep = tui.StepTodos
+					// Start with an explicit Todos menu to avoid navigation deadlocks
+					model.TodosMenuActive = true
+					model.TodoInput.Blur()
+				} else {
+					// find first unanswered question
+					if len(templates) > 0 {
+						tmpl := templates[model.TemplateCursor]
+						qi := 0
+						foundUnanswered := false
+						for i, q := range tmpl.Questions {
+							if _, ok := entry.Questions[q.Title]; !ok || entry.Questions[q.Title] == "" {
+								qi = i
+								foundUnanswered = true
+								break
+							}
+						}
+						if foundUnanswered {
+							model.CurrentStep = tui.StepQuestions
+							model.QuestionIndex = qi
+							q := tmpl.Questions[qi].Title
+							model.QuestionInput.SetValue(entry.Questions[q])
+							model.QuestionInput.Focus()
+						} else {
+							model.CurrentStep = tui.StepDone
+						}
+					} else {
+						model.CurrentStep = tui.StepTodos
+						// Start with Todos menu active when opening existing entry
+						model.TodosMenuActive = true
+						model.TodoInput.Blur()
+					}
+				}
+			}
+		}
+	}
+
 	p := tea.NewProgram(model)
 
 	// 8. Run TUI

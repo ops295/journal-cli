@@ -60,6 +60,23 @@ func (m Model) View() string {
 		s.WriteString(titleStyle.Render("Today's Todos"))
 		s.WriteString("\n\n")
 
+		// If Todos menu active, show options to avoid navigation deadlocks
+		if m.TodosMenuActive {
+			opts := []string{"Edit Todos", "Manage Backlog", "Start Fresh", "Continue"}
+			s.WriteString("Choose how to manage today's todos:\n")
+			for i, o := range opts {
+				cursor := " "
+				style := itemStyle
+				if m.TodosMenuCursor == i {
+					cursor = ">"
+					style = selectedItemStyle
+				}
+				s.WriteString(style.Render(fmt.Sprintf("%s %s\n", cursor, o)))
+			}
+			s.WriteString("\n(Use Up/Down to select, Enter to confirm)")
+			return s.String()
+		}
+
 		// Backlog + Added todos rendered as a single linear selectable list.
 		if len(m.Entry.Backlog) > 0 {
 			s.WriteString("🔁 Backlog (Up/Down to select, Space to toggle):\n")

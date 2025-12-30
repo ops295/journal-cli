@@ -3,7 +3,6 @@ package tui
 import (
 	"journal-cli/internal/domain"
 
-
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -81,93 +80,138 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 
 	case StepTodos:
-			// We'll treat backlog items and added todos as a single linear selectable list.
-			// Backlog items come first, then Entry.Todos. The BacklogCursor indexes into that combined list.
-			totalSelectable := len(m.Entry.Backlog) + len(m.Entry.Todos)
-
+		// If Todos menu active, handle simple menu navigation first to avoid deadlocks
+		if m.TodosMenuActive {
 			switch msg := msg.(type) {
 			case tea.KeyMsg:
-				// Use Tab/Shift+Tab to switch focus between input and the selectable list.
-				if msg.Type == tea.KeyTab && m.TodoInput.Focused() && totalSelectable > 0 {
-					m.TodoInput.Blur()
-					// focus on first selectable item
-					m.BacklogCursor = 0
+				switch msg.String() {
+				case "up", "k":
+					if m.TodosMenuCursor > 0 {
+						m.TodosMenuCursor--
+					}
 					return m, nil
-				}
-
-				if msg.Type == tea.KeyShiftTab && !m.TodoInput.Focused() {
-					// shift+tab moves focus back to input
-					m.TodoInput.Focus()
+				case "down", "j":
+					if m.TodosMenuCursor < 3 {
+						m.TodosMenuCursor++
+					}
 					return m, nil
-				}
-
-				// When not focused, Up/Down (or k/j) navigate the linear selection; Tab/Down past end focuses input
-				if !m.TodoInput.Focused() {
-					if msg.String() == "up" || msg.String() == "k" {
-						if m.BacklogCursor > 0 {
-							m.BacklogCursor--
+				case "enter":
+					switch m.TodosMenuCursor {
+					case 0: // Edit Todos
+						m.TodosMenuActive = false
+						m.TodoInput.Focus()
+						return m, nil
+					case 1: // Manage Backlog
+						m.TodosMenuActive = false
+						m.TodoInput.Blur()
+						// move cursor into combined list if any
+						if len(m.Entry.Backlog)+len(m.Entry.Todos) > 0 {
+							m.BacklogCursor = 0
 						}
 						return m, nil
-					}
-					if msg.String() == "down" || msg.String() == "j" {
-						if m.BacklogCursor < totalSelectable-1 {
-							m.BacklogCursor++
-						} else {
-							m.TodoInput.Focus()
-						}
+					case 2: // Start Fresh
+						m.TodosMenuActive = false
+						m.Entry.Todos = []domain.Todo{}
+						m.Entry.Backlog = []domain.Todo{}
+						m.TodoInput.Focus()
 						return m, nil
-					}
-
-					// Space toggles backlog selection only (backlog indices are 0..len(backlog)-1)
-					if msg.String() == " " {
-						if m.BacklogCursor < len(m.Entry.Backlog) {
-							if m.SelectedBacklog[m.BacklogCursor] {
-								delete(m.SelectedBacklog, m.BacklogCursor)
-							} else {
-								m.SelectedBacklog[m.BacklogCursor] = true
-							}
-						}
+					case 3: // Continue
+						m.TodosMenuActive = false
+						m.TodoInput.Focus()
 						return m, nil
-					}
-
-					// Enter on an added todo opens it for editing
-					if msg.String() == "enter" {
-						if m.BacklogCursor >= len(m.Entry.Backlog) {
-							idx := m.BacklogCursor - len(m.Entry.Backlog)
-							if idx >= 0 && idx < len(m.Entry.Todos) {
-								// Load the todo into input for editing, remove from list temporarily
-								val := m.Entry.Todos[idx].Text
-								// remove from slice
-								m.Entry.Todos = append(m.Entry.Todos[:idx], m.Entry.Todos[idx+1:]...)
-								m.TodoInput.SetValue(val)
-								m.TodoInput.Focus()
-								return m, nil
-							}
-						}
 					}
 				}
 			}
+			return m, nil
+		}
 
-			if m.TodoInput.Focused() {
-				m.TodoInput, cmd = m.TodoInput.Update(msg)
-				switch msg := msg.(type) {
-				case tea.KeyMsg:
-					if msg.Type == tea.KeyEnter {
-						val := m.TodoInput.Value()
-						if val == "" {
-							// Empty line means we are done with todos
-							m.CurrentStep = StepQuestions
-							m.QuestionIndex = 0
-							m.QuestionInput.Focus()
+		// We'll treat backlog items and added todos as a single linear selectable list.
+		// Backlog items come first, then Entry.Todos. The BacklogCursor indexes into that combined list.
+		totalSelectable := len(m.Entry.Backlog) + len(m.Entry.Todos)
+
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			// Use Tab/Shift+Tab to switch focus between input and the selectable list.
+			if msg.Type == tea.KeyTab && m.TodoInput.Focused() && totalSelectable > 0 {
+				m.TodoInput.Blur()
+				// focus on first selectable item
+				m.BacklogCursor = 0
+				return m, nil
+			}
+
+			if msg.Type == tea.KeyShiftTab && !m.TodoInput.Focused() {
+				// shift+tab moves focus back to input
+				m.TodoInput.Focus()
+				return m, nil
+			}
+
+			// When not focused, Up/Down (or k/j) navigate the linear selection; Tab/Down past end focuses input
+			if !m.TodoInput.Focused() {
+				if msg.String() == "up" || msg.String() == "k" {
+					if m.BacklogCursor > 0 {
+						m.BacklogCursor--
+					}
+					return m, nil
+				}
+				if msg.String() == "down" || msg.String() == "j" {
+					if m.BacklogCursor < totalSelectable-1 {
+						m.BacklogCursor++
+					} else {
+						m.TodoInput.Focus()
+					}
+					return m, nil
+				}
+
+				// Space toggles backlog selection only (backlog indices are 0..len(backlog)-1)
+				if msg.String() == " " {
+					if m.BacklogCursor < len(m.Entry.Backlog) {
+						if m.SelectedBacklog[m.BacklogCursor] {
+							delete(m.SelectedBacklog, m.BacklogCursor)
+						} else {
+							m.SelectedBacklog[m.BacklogCursor] = true
+						}
+					}
+					return m, nil
+				}
+
+				// Enter on an added todo opens it for editing
+				if msg.String() == "enter" {
+					if m.BacklogCursor >= len(m.Entry.Backlog) {
+						idx := m.BacklogCursor - len(m.Entry.Backlog)
+						if idx >= 0 && idx < len(m.Entry.Todos) {
+							// Load the todo into input for editing, remove from list temporarily
+							val := m.Entry.Todos[idx].Text
+							// remove from slice
+							m.Entry.Todos = append(m.Entry.Todos[:idx], m.Entry.Todos[idx+1:]...)
+							m.TodoInput.SetValue(val)
+							m.TodoInput.Focus()
 							return m, nil
 						}
-						// Add todo (or re-add edited todo)
-						m.Entry.Todos = append(m.Entry.Todos, domain.Todo{Text: val, Done: false})
-						m.TodoInput.Reset()
 					}
 				}
-				return m, cmd
 			}
+		}
+
+		if m.TodoInput.Focused() {
+			m.TodoInput, cmd = m.TodoInput.Update(msg)
+			switch msg := msg.(type) {
+			case tea.KeyMsg:
+				if msg.Type == tea.KeyEnter {
+					val := m.TodoInput.Value()
+					if val == "" {
+						// Empty line means we are done with todos
+						m.CurrentStep = StepQuestions
+						m.QuestionIndex = 0
+						m.QuestionInput.Focus()
+						return m, nil
+					}
+					// Add todo (or re-add edited todo)
+					m.Entry.Todos = append(m.Entry.Todos, domain.Todo{Text: val, Done: false})
+					m.TodoInput.Reset()
+				}
+			}
+			return m, cmd
+		}
 
 	case StepQuestions:
 		m.QuestionInput, cmd = m.QuestionInput.Update(msg)
