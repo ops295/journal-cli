@@ -92,7 +92,7 @@ func (m Model) View() string {
 		}
 
 		s.WriteString(m.TodoInput.View())
-		s.WriteString("\n\n(Enter to add, Empty Enter to finish; Up/Down to navigate; Enter on added todo to edit)")
+		s.WriteString("\n\n(Enter to add, Empty Enter to finish; Tab/Shift+Tab to switch focus; Up/Down to navigate; Enter on added todo to edit)")
 
 	case StepQuestions:
 		currentTemplate := m.Templates[m.TemplateCursor]

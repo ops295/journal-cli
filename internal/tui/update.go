@@ -87,14 +87,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			switch msg := msg.(type) {
 			case tea.KeyMsg:
-				// From input, Up should move focus to the selectable list if any
-				if (msg.String() == "up" || msg.String() == "k") && m.TodoInput.Focused() && totalSelectable > 0 {
+				// Use Tab/Shift+Tab to switch focus between input and the selectable list.
+				if msg.Type == tea.KeyTab && m.TodoInput.Focused() && totalSelectable > 0 {
 					m.TodoInput.Blur()
-					m.BacklogCursor = totalSelectable - 1
+					// focus on first selectable item
+					m.BacklogCursor = 0
 					return m, nil
 				}
 
-				// When not focused, Up/Down navigate the linear selection; Down past end focuses input
+				if msg.Type == tea.KeyShiftTab && !m.TodoInput.Focused() {
+					// shift+tab moves focus back to input
+					m.TodoInput.Focus()
+					return m, nil
+				}
+
+				// When not focused, Up/Down (or k/j) navigate the linear selection; Tab/Down past end focuses input
 				if !m.TodoInput.Focused() {
 					if msg.String() == "up" || msg.String() == "k" {
 						if m.BacklogCursor > 0 {

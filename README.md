@@ -60,6 +60,6 @@ questions:
 1. Run the app.
 2. Select a template using Up/Down arrows and Enter.
 3. Enter your Mood and Energy.
-4. Add Todos for today. Press Enter to add, leave empty and press Enter to finish.
+4. Add Todos for today. Press Enter to add. Use Tab / Shift+Tab to switch between the todo input and the backlog/added list; use Up/Down (or k/j) to navigate the list. Leave the input empty and press Enter to finish.
 5. Answer the questions. Use Ctrl+S or Ctrl+N to move to the next question.
 6. The journal entry will be saved to your configured directory.
