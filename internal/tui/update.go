@@ -81,69 +81,123 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 
 	case StepTodos:
-		// If TodoInput is focused, handle that.
-		// But we also want to navigate backlog.
-		// Let's say: Up/Down navigates backlog if focused?
-		// Or maybe: Tab switches focus between Input and Backlog?
-		// Simpler: Up arrow from Input goes to Backlog. Down from Backlog goes to Input.
-		
-		switch msg := msg.(type) {
-		case tea.KeyMsg:
-			if msg.String() == "up" && m.TodoInput.Focused() && len(m.Entry.Backlog) > 0 {
-				m.TodoInput.Blur()
-				m.BacklogCursor = len(m.Entry.Backlog) - 1
-				return m, nil
-			}
-			if msg.String() == "down" && !m.TodoInput.Focused() {
-				if m.BacklogCursor < len(m.Entry.Backlog)-1 {
-					m.BacklogCursor++
-				} else {
-					m.TodoInput.Focus()
-				}
-				return m, nil
-			}
-			if msg.String() == "up" && !m.TodoInput.Focused() {
-				if m.BacklogCursor > 0 {
-					m.BacklogCursor--
-				}
-				return m, nil
-			}
-			if msg.String() == " " && !m.TodoInput.Focused() {
-				// Toggle selection
-				if m.SelectedBacklog[m.BacklogCursor] {
-					delete(m.SelectedBacklog, m.BacklogCursor)
-				} else {
-					m.SelectedBacklog[m.BacklogCursor] = true
-				}
-				return m, nil
-			}
-		}
+			// We'll treat backlog items and added todos as a single linear selectable list.
+			// Backlog items come first, then Entry.Todos. The BacklogCursor indexes into that combined list.
+			totalSelectable := len(m.Entry.Backlog) + len(m.Entry.Todos)
 
-		if m.TodoInput.Focused() {
-			m.TodoInput, cmd = m.TodoInput.Update(msg)
 			switch msg := msg.(type) {
 			case tea.KeyMsg:
-				if msg.Type == tea.KeyEnter {
-					val := m.TodoInput.Value()
-					if val == "" {
-						// Empty line means we are done with todos
-						m.CurrentStep = StepQuestions
-						m.QuestionIndex = 0
-						m.QuestionInput.Focus()
+				// From input, Up should move focus to the selectable list if any
+				if (msg.String() == "up" || msg.String() == "k") && m.TodoInput.Focused() && totalSelectable > 0 {
+					m.TodoInput.Blur()
+					m.BacklogCursor = totalSelectable - 1
+					return m, nil
+				}
+
+				// When not focused, Up/Down navigate the linear selection; Down past end focuses input
+				if !m.TodoInput.Focused() {
+					if msg.String() == "up" || msg.String() == "k" {
+						if m.BacklogCursor > 0 {
+							m.BacklogCursor--
+						}
 						return m, nil
 					}
-					// Add todo
-					m.Entry.Todos = append(m.Entry.Todos, domain.Todo{Text: val, Done: false})
-					m.TodoInput.Reset()
+					if msg.String() == "down" || msg.String() == "j" {
+						if m.BacklogCursor < totalSelectable-1 {
+							m.BacklogCursor++
+						} else {
+							m.TodoInput.Focus()
+						}
+						return m, nil
+					}
+
+					// Space toggles backlog selection only (backlog indices are 0..len(backlog)-1)
+					if msg.String() == " " {
+						if m.BacklogCursor < len(m.Entry.Backlog) {
+							if m.SelectedBacklog[m.BacklogCursor] {
+								delete(m.SelectedBacklog, m.BacklogCursor)
+							} else {
+								m.SelectedBacklog[m.BacklogCursor] = true
+							}
+						}
+						return m, nil
+					}
+
+					// Enter on an added todo opens it for editing
+					if msg.String() == "enter" {
+						if m.BacklogCursor >= len(m.Entry.Backlog) {
+							idx := m.BacklogCursor - len(m.Entry.Backlog)
+							if idx >= 0 && idx < len(m.Entry.Todos) {
+								// Load the todo into input for editing, remove from list temporarily
+								val := m.Entry.Todos[idx].Text
+								// remove from slice
+								m.Entry.Todos = append(m.Entry.Todos[:idx], m.Entry.Todos[idx+1:]...)
+								m.TodoInput.SetValue(val)
+								m.TodoInput.Focus()
+								return m, nil
+							}
+						}
+					}
 				}
 			}
-			return m, cmd
-		}
+
+			if m.TodoInput.Focused() {
+				m.TodoInput, cmd = m.TodoInput.Update(msg)
+				switch msg := msg.(type) {
+				case tea.KeyMsg:
+					if msg.Type == tea.KeyEnter {
+						val := m.TodoInput.Value()
+						if val == "" {
+							// Empty line means we are done with todos
+							m.CurrentStep = StepQuestions
+							m.QuestionIndex = 0
+							m.QuestionInput.Focus()
+							return m, nil
+						}
+						// Add todo (or re-add edited todo)
+						m.Entry.Todos = append(m.Entry.Todos, domain.Todo{Text: val, Done: false})
+						m.TodoInput.Reset()
+					}
+				}
+				return m, cmd
+			}
 
 	case StepQuestions:
 		m.QuestionInput, cmd = m.QuestionInput.Update(msg)
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
+			// Navigate previous/next with Up/Down arrows
+			if (msg.String() == "up" || msg.String() == "k") && m.QuestionIndex > 0 {
+				// Save current answer first
+				currentTemplate := m.Templates[m.TemplateCursor]
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				// Move back
+				m.QuestionIndex--
+				prevQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[prevQ])
+				m.QuestionInput.Focus()
+				return m, nil
+			}
+			if (msg.String() == "down" || msg.String() == "j") {
+				currentTemplate := m.Templates[m.TemplateCursor]
+				// Save current answer first
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				// Move forward if possible
+				if m.QuestionIndex < len(currentTemplate.Questions)-1 {
+					m.QuestionIndex++
+					nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+					m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+					m.QuestionInput.Focus()
+					return m, nil
+				}
+				// If at last question, treat Down as finish
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				m.CurrentStep = StepDone
+				return m, tea.Quit
+			}
+
 			// Use Ctrl+S or Ctrl+N to submit answer
 			if msg.Type == tea.KeyCtrlS || msg.Type == tea.KeyCtrlN {
 				// Save answer
