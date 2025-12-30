@@ -16,7 +16,7 @@ A cross-platform terminal-based daily journaling application written in Go.
 
 ### Build
 ```bash
-go build -o journal cmd/journal/main.go
+make build
 ```
 
 ### Run
@@ -63,3 +63,16 @@ questions:
 4. Add Todos for today. Press Enter to add, leave empty and press Enter to finish.
 5. Answer the questions. Use Ctrl+S or Ctrl+N to move to the next question.
 6. The journal entry will be saved to your configured directory.
+
+## Development
+
+Use the included `Makefile` to build and test the project:
+
+```bash
+make build        # build for current platform
+make build-all    # cross-compile for common platforms
+make test         # run unit tests
+make coverage     # generate HTML coverage report
+```
+
+See `CONTRIBUTING.md` for contribution guidelines.
