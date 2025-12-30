@@ -13,13 +13,29 @@ const Version = "1.0.0"
 func main() {
 	help := flag.Bool("help", false, "Show help message")
 	version := flag.Bool("version", false, "Show version")
-	
+
 	// Custom usage message
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "A cross-platform terminal-based daily journaling application.\n\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nConfiguration:\n")
+		fmt.Fprintf(os.Stderr, "  The application looks for a config.yaml file in:\n")
+		fmt.Fprintf(os.Stderr, "  - macOS:   ~/Library/Application Support/journal-cli/config.yaml\n")
+		fmt.Fprintf(os.Stderr, "  - Linux:   ~/.config/journal-cli/config.yaml\n")
+		fmt.Fprintf(os.Stderr, "  - Windows: %%APPDATA%%\\journal-cli\\config.yaml\n")
+		fmt.Fprintf(os.Stderr, "\n  Example config.yaml:\n")
+		fmt.Fprintf(os.Stderr, "    obsidian_vault: \"/Users/username/Documents/ObsidianVault\"\n")
+		fmt.Fprintf(os.Stderr, "    journal_dir: \"Journal/Daily\" # Relative to obsidian_vault\n\n")
+		fmt.Fprintf(os.Stderr, "Templates:\n")
+		fmt.Fprintf(os.Stderr, "  Templates are YAML files stored in the 'templates' subdirectory of the config folder.\n")
+		fmt.Fprintf(os.Stderr, "  Example template:\n")
+		fmt.Fprintf(os.Stderr, "    name: daily-reflection\n")
+		fmt.Fprintf(os.Stderr, "    description: A simple daily reflection\n")
+		fmt.Fprintf(os.Stderr, "    questions:\n")
+		fmt.Fprintf(os.Stderr, "      - id: gratitude\n")
+		fmt.Fprintf(os.Stderr, "        title: \"What are you grateful for?\"\n")
 	}
 
 	flag.Parse()

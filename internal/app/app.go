@@ -10,6 +10,7 @@ import (
 	"journal-cli/internal/domain"
 	"journal-cli/internal/fs"
 	"journal-cli/internal/markdown"
+	"journal-cli/internal/stats"
 	"journal-cli/internal/template"
 	"journal-cli/internal/todo"
 	"journal-cli/internal/tui"
@@ -73,11 +74,17 @@ func Run() {
 	entry := domain.NewJournalEntry(now, "")
 	entry.Backlog = backlog
 
-	// 6. Initialize TUI
-	model := tui.NewModel(cfg, templates, entry)
+	// 6. Stats
+	s, err := stats.GetStats(journalDir)
+	if err != nil {
+		fmt.Printf("Warning: could not calculate stats: %v\n", err)
+	}
+
+	// 7. Initialize TUI
+	model := tui.NewModel(cfg, templates, entry, s)
 	p := tea.NewProgram(model)
 
-	// 7. Run TUI
+	// 8. Run TUI
 	finalModel, err := p.Run()
 	if err != nil {
 		fmt.Printf("Error running TUI: %v\n", err)
@@ -104,7 +111,7 @@ func Run() {
 	// When generating markdown:
 	// - Todos section has new items + selected backlog items.
 	// - Backlog section has unselected backlog items.
-	
+
 	var newTodos []domain.Todo
 	var remainingBacklog []domain.Todo
 
@@ -118,7 +125,7 @@ func Run() {
 	}
 	// Append newly added todos
 	newTodos = append(newTodos, m.Entry.Todos...)
-	
+
 	m.Entry.Todos = newTodos
 	m.Entry.Backlog = remainingBacklog
 
@@ -134,5 +141,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Journal entry saved to %s\n", todayFile)
+	fmt.Printf("Journal entry saved to: %s\n", todayFile)
+	fmt.Printf("To view:  cat \"%s\"\n", todayFile)
+	fmt.Printf("To edit:  nano \"%s\"\n", todayFile)
 }

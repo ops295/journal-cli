@@ -3,6 +3,7 @@ package tui
 import (
 	"journal-cli/internal/config"
 	"journal-cli/internal/domain"
+	"journal-cli/internal/stats"
 	"journal-cli/internal/template"
 
 	"github.com/charmbracelet/bubbles/textarea"
@@ -26,25 +27,26 @@ type Model struct {
 	Config    *config.Config
 	Templates []template.Template
 	Entry     *domain.JournalEntry
+	Stats     stats.Stats
 
-	CurrentStep     Step
-	TemplateCursor  int
-	QuestionIndex   int
-	TodoInput       textinput.Model
-	QuestionInput   textarea.Model
-	MoodInput       textinput.Model
-	EnergyInput     textinput.Model
-	HighlightInput  textinput.Model
+	CurrentStep    Step
+	TemplateCursor int
+	QuestionIndex  int
+	TodoInput      textinput.Model
+	QuestionInput  textarea.Model
+	MoodInput      textinput.Model
+	EnergyInput    textinput.Model
+	HighlightInput textinput.Model
 
 	// For Todos
 	BacklogCursor   int
 	SelectedBacklog map[int]bool // Index in Entry.Backlog -> true if selected
 	TodoMode        bool         // true if adding a todo, false if reviewing backlog
-	
+
 	Err error
 }
 
-func NewModel(cfg *config.Config, templates []template.Template, entry *domain.JournalEntry) Model {
+func NewModel(cfg *config.Config, templates []template.Template, entry *domain.JournalEntry, s stats.Stats) Model {
 	ti := textinput.New()
 	ti.Placeholder = "Enter a task..."
 	ti.Focus()
@@ -69,6 +71,7 @@ func NewModel(cfg *config.Config, templates []template.Template, entry *domain.J
 		Config:          cfg,
 		Templates:       templates,
 		Entry:           entry,
+		Stats:           s,
 		CurrentStep:     StepSelectTemplate,
 		TodoInput:       ti,
 		QuestionInput:   ta,

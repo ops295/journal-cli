@@ -16,6 +16,14 @@ func (m Model) View() string {
 	case StepSelectTemplate:
 		s.WriteString(titleStyle.Render("Select Template"))
 		s.WriteString("\n\n")
+
+		// Display Stats
+		s.WriteString(subtle.Render(fmt.Sprintf(" 📝 Total Entries: %d", m.Stats.TotalEntries)))
+		if !m.Stats.LastMissed.IsZero() {
+			s.WriteString(subtle.Render(fmt.Sprintf(" | 🗓️  Last Missed: %s", m.Stats.LastMissed.Format("Monday, 02 Jan"))))
+		}
+		s.WriteString("\n\n")
+
 		for i, t := range m.Templates {
 			cursor := " "
 			style := itemStyle
@@ -51,7 +59,7 @@ func (m Model) View() string {
 	case StepTodos:
 		s.WriteString(titleStyle.Render("Today's Todos"))
 		s.WriteString("\n\n")
-		
+
 		// Backlog
 		if len(m.Entry.Backlog) > 0 {
 			s.WriteString("🔁 Backlog (Up/Down to select, Space to toggle):\n")

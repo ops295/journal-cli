@@ -22,4 +22,7 @@ var (
 
 	itemStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("240"))
+
+	subtle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("241"))
 )
