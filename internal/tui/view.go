@@ -60,7 +60,24 @@ func (m Model) View() string {
 		s.WriteString(titleStyle.Render("Today's Todos"))
 		s.WriteString("\n\n")
 
-		// Backlog
+		// If Todos menu active, show options to avoid navigation deadlocks
+		if m.TodosMenuActive {
+			opts := []string{"Edit Todos", "Manage Backlog", "Start Fresh", "Continue"}
+			s.WriteString("Choose how to manage today's todos:\n")
+			for i, o := range opts {
+				cursor := " "
+				style := itemStyle
+				if m.TodosMenuCursor == i {
+					cursor = ">"
+					style = selectedItemStyle
+				}
+				s.WriteString(style.Render(fmt.Sprintf("%s %s\n", cursor, o)))
+			}
+			s.WriteString("\n(Use Up/Down to select, Enter to confirm)")
+			return s.String()
+		}
+
+		// Backlog + Added todos rendered as a single linear selectable list.
 		if len(m.Entry.Backlog) > 0 {
 			s.WriteString("🔁 Backlog (Up/Down to select, Space to toggle):\n")
 			for i, t := range m.Entry.Backlog {
@@ -77,18 +94,22 @@ func (m Model) View() string {
 			s.WriteString("\n")
 		}
 
-		// Show added todos (including selected backlog items preview?)
-		// For now just show newly added ones
 		if len(m.Entry.Todos) > 0 {
-			s.WriteString("Added:\n")
-			for _, t := range m.Entry.Todos {
-				s.WriteString(fmt.Sprintf("- %s\n", t.Text))
+			s.WriteString("Added (Enter to edit):\n")
+			// offset index for added todos is len(Backlog)
+			off := len(m.Entry.Backlog)
+			for j, t := range m.Entry.Todos {
+				cursor := " "
+				if !m.TodoInput.Focused() && m.BacklogCursor == off+j {
+					cursor = ">"
+				}
+				s.WriteString(fmt.Sprintf("%s - %s\n", cursor, t.Text))
 			}
 			s.WriteString("\n")
 		}
 
 		s.WriteString(m.TodoInput.View())
-		s.WriteString("\n\n(Enter to add, Empty Enter to finish)")
+		s.WriteString("\n\n(Enter to add, Empty Enter to finish; Tab/Shift+Tab to switch focus; Up/Down to navigate; Enter on added todo to edit)")
 
 	case StepQuestions:
 		currentTemplate := m.Templates[m.TemplateCursor]
@@ -97,7 +118,7 @@ func (m Model) View() string {
 			s.WriteString(titleStyle.Render(q))
 			s.WriteString("\n\n")
 			s.WriteString(m.QuestionInput.View())
-			s.WriteString("\n\n(Ctrl+S or Ctrl+N to next)")
+			s.WriteString("\n\n(Enter to save+next; Shift+Right to next; Shift+Left to previous; Ctrl+S or Ctrl+N still advances)")
 		}
 
 	case StepDone:

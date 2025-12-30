@@ -3,7 +3,6 @@ package tui
 import (
 	"journal-cli/internal/domain"
 
-
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -81,41 +80,115 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 
 	case StepTodos:
-		// If TodoInput is focused, handle that.
-		// But we also want to navigate backlog.
-		// Let's say: Up/Down navigates backlog if focused?
-		// Or maybe: Tab switches focus between Input and Backlog?
-		// Simpler: Up arrow from Input goes to Backlog. Down from Backlog goes to Input.
-		
+		// If Todos menu active, handle simple menu navigation first to avoid deadlocks
+		if m.TodosMenuActive {
+			switch msg := msg.(type) {
+			case tea.KeyMsg:
+				switch msg.String() {
+				case "up", "k":
+					if m.TodosMenuCursor > 0 {
+						m.TodosMenuCursor--
+					}
+					return m, nil
+				case "down", "j":
+					if m.TodosMenuCursor < 3 {
+						m.TodosMenuCursor++
+					}
+					return m, nil
+				case "enter":
+					switch m.TodosMenuCursor {
+					case 0: // Edit Todos
+						m.TodosMenuActive = false
+						m.TodoInput.Focus()
+						return m, nil
+					case 1: // Manage Backlog
+						m.TodosMenuActive = false
+						m.TodoInput.Blur()
+						// move cursor into combined list if any
+						if len(m.Entry.Backlog)+len(m.Entry.Todos) > 0 {
+							m.BacklogCursor = 0
+						}
+						return m, nil
+					case 2: // Start Fresh
+						m.TodosMenuActive = false
+						m.Entry.Todos = []domain.Todo{}
+						m.Entry.Backlog = []domain.Todo{}
+						m.TodoInput.Focus()
+						return m, nil
+					case 3: // Continue
+						m.TodosMenuActive = false
+						m.TodoInput.Focus()
+						return m, nil
+					}
+				}
+			}
+			return m, nil
+		}
+
+		// We'll treat backlog items and added todos as a single linear selectable list.
+		// Backlog items come first, then Entry.Todos. The BacklogCursor indexes into that combined list.
+		totalSelectable := len(m.Entry.Backlog) + len(m.Entry.Todos)
+
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
-			if msg.String() == "up" && m.TodoInput.Focused() && len(m.Entry.Backlog) > 0 {
+			// Use Tab/Shift+Tab to switch focus between input and the selectable list.
+			if msg.Type == tea.KeyTab && m.TodoInput.Focused() && totalSelectable > 0 {
 				m.TodoInput.Blur()
-				m.BacklogCursor = len(m.Entry.Backlog) - 1
+				// focus on first selectable item
+				m.BacklogCursor = 0
 				return m, nil
 			}
-			if msg.String() == "down" && !m.TodoInput.Focused() {
-				if m.BacklogCursor < len(m.Entry.Backlog)-1 {
-					m.BacklogCursor++
-				} else {
-					m.TodoInput.Focus()
-				}
+
+			if msg.Type == tea.KeyShiftTab && !m.TodoInput.Focused() {
+				// shift+tab moves focus back to input
+				m.TodoInput.Focus()
 				return m, nil
 			}
-			if msg.String() == "up" && !m.TodoInput.Focused() {
-				if m.BacklogCursor > 0 {
-					m.BacklogCursor--
+
+			// When not focused, Up/Down (or k/j) navigate the linear selection; Tab/Down past end focuses input
+			if !m.TodoInput.Focused() {
+				if msg.String() == "up" || msg.String() == "k" {
+					if m.BacklogCursor > 0 {
+						m.BacklogCursor--
+					}
+					return m, nil
 				}
-				return m, nil
-			}
-			if msg.String() == " " && !m.TodoInput.Focused() {
-				// Toggle selection
-				if m.SelectedBacklog[m.BacklogCursor] {
-					delete(m.SelectedBacklog, m.BacklogCursor)
-				} else {
-					m.SelectedBacklog[m.BacklogCursor] = true
+				if msg.String() == "down" || msg.String() == "j" {
+					if m.BacklogCursor < totalSelectable-1 {
+						m.BacklogCursor++
+					} else {
+						m.TodoInput.Focus()
+					}
+					return m, nil
 				}
-				return m, nil
+
+				// Space toggles backlog selection only (backlog indices are 0..len(backlog)-1)
+				if msg.String() == " " {
+					if m.BacklogCursor < len(m.Entry.Backlog) {
+						if m.SelectedBacklog[m.BacklogCursor] {
+							delete(m.SelectedBacklog, m.BacklogCursor)
+						} else {
+							m.SelectedBacklog[m.BacklogCursor] = true
+						}
+					}
+					return m, nil
+				}
+
+				// Enter on an added todo opens it for editing
+				if msg.String() == "enter" {
+					if m.BacklogCursor >= len(m.Entry.Backlog) {
+						idx := m.BacklogCursor - len(m.Entry.Backlog)
+						if idx >= 0 && idx < len(m.Entry.Todos) {
+							// Load the todo into input for editing, remove from list temporarily
+							val := m.Entry.Todos[idx].Text
+							// remove from slice
+							m.Entry.Todos = append(m.Entry.Todos[:idx], m.Entry.Todos[idx+1:]...)
+							m.TodoInput.SetValue(val)
+							m.TodoInput.Focus()
+							return m, nil
+						}
+					}
+				}
 			}
 		}
 
@@ -132,7 +205,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.QuestionInput.Focus()
 						return m, nil
 					}
-					// Add todo
+					// Add todo (or re-add edited todo)
 					m.Entry.Todos = append(m.Entry.Todos, domain.Todo{Text: val, Done: false})
 					m.TodoInput.Reset()
 				}
@@ -144,20 +217,86 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.QuestionInput, cmd = m.QuestionInput.Update(msg)
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
-			// Use Ctrl+S or Ctrl+N to submit answer
-			if msg.Type == tea.KeyCtrlS || msg.Type == tea.KeyCtrlN {
-				// Save answer
+			// Shift+Tab => Next question (save current)
+			if msg.Type == tea.KeyShiftTab && !msg.Alt {
 				currentTemplate := m.Templates[m.TemplateCursor]
 				question := currentTemplate.Questions[m.QuestionIndex].Title
 				m.Entry.Questions[question] = m.QuestionInput.Value()
-				
 				m.QuestionInput.Reset()
 				m.QuestionIndex++
-
 				if m.QuestionIndex >= len(currentTemplate.Questions) {
 					m.CurrentStep = StepDone
 					return m, tea.Quit
 				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
+				return m, nil
+			}
+
+			// Shift+Left => Previous question
+			if msg.String() == "shift+left" {
+				if m.QuestionIndex > 0 {
+					currentTemplate := m.Templates[m.TemplateCursor]
+					question := currentTemplate.Questions[m.QuestionIndex].Title
+					m.Entry.Questions[question] = m.QuestionInput.Value()
+					m.QuestionIndex--
+					prevQ := currentTemplate.Questions[m.QuestionIndex].Title
+					m.QuestionInput.SetValue(m.Entry.Questions[prevQ])
+					m.QuestionInput.Focus()
+				}
+				return m, nil
+			}
+
+			// Shift+Right => Next question
+			if msg.String() == "shift+right" {
+				currentTemplate := m.Templates[m.TemplateCursor]
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				m.QuestionInput.Reset()
+				m.QuestionIndex++
+				if m.QuestionIndex >= len(currentTemplate.Questions) {
+					m.CurrentStep = StepDone
+					return m, tea.Quit
+				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
+				return m, nil
+			}
+
+			// Enter => save current and advance
+			if msg.Type == tea.KeyEnter {
+				currentTemplate := m.Templates[m.TemplateCursor]
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				m.QuestionInput.Reset()
+				m.QuestionIndex++
+				if m.QuestionIndex >= len(currentTemplate.Questions) {
+					m.CurrentStep = StepDone
+					return m, tea.Quit
+				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
+				return m, nil
+			}
+
+			// Backwards compatible: Ctrl+S or Ctrl+N to submit answer
+			if msg.Type == tea.KeyCtrlS || msg.Type == tea.KeyCtrlN {
+				currentTemplate := m.Templates[m.TemplateCursor]
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				m.QuestionInput.Reset()
+				m.QuestionIndex++
+				if m.QuestionIndex >= len(currentTemplate.Questions) {
+					m.CurrentStep = StepDone
+					return m, tea.Quit
+				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
+				return m, nil
 			}
 		}
 		return m, cmd
