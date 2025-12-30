@@ -190,8 +190,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 
-			// Alt+Shift+Tab => Previous question (save current and load previous)
-			if msg.Type == tea.KeyShiftTab && msg.Alt {
+			// Shift+Left => Previous question
+			if msg.String() == "shift+left" {
 				if m.QuestionIndex > 0 {
 					currentTemplate := m.Templates[m.TemplateCursor]
 					question := currentTemplate.Questions[m.QuestionIndex].Title
@@ -201,6 +201,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.QuestionInput.SetValue(m.Entry.Questions[prevQ])
 					m.QuestionInput.Focus()
 				}
+				return m, nil
+			}
+
+			// Shift+Right => Next question
+			if msg.String() == "shift+right" {
+				currentTemplate := m.Templates[m.TemplateCursor]
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				m.QuestionInput.Reset()
+				m.QuestionIndex++
+				if m.QuestionIndex >= len(currentTemplate.Questions) {
+					m.CurrentStep = StepDone
+					return m, tea.Quit
+				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
 				return m, nil
 			}
 

@@ -101,7 +101,7 @@ func (m Model) View() string {
 			s.WriteString(titleStyle.Render(q))
 			s.WriteString("\n\n")
 			s.WriteString(m.QuestionInput.View())
-			s.WriteString("\n\n(Enter to save+next; Shift+Tab to next; Alt+Shift+Tab to previous; Ctrl+S or Ctrl+N still advances)")
+			s.WriteString("\n\n(Enter to save+next; Shift+Right to next; Shift+Left to previous; Ctrl+S or Ctrl+N still advances)")
 		}
 
 	case StepDone:
