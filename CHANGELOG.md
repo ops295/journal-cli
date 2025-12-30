@@ -10,6 +10,15 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 - Initial development items tracked here.
 
+## [0.2.0] - 2025-12-30
+
+### Changed
+
+- Bumped version to 0.2.0
+- Fixed config tests on macOS
+- Fixed release pipeline trigger (added manual trigger)
+- Added automated release notes generation
+
 ## [0.1.0] - 2025-12-30
 
 ### Added
