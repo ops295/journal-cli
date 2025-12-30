@@ -117,4 +117,3 @@ Note: shells treat flags-without-values differently. Using `--todos ""` explicit
 We welcome contributions! See `CONTRIBUTING.md` for guidelines on filing issues and submitting pull requests. Maintainers will review incoming PRs — the repository uses a review-first workflow and code owners to ensure one or more reviews are required before merging.
 
 If you'd like to help, open an issue or submit a draft PR and we will guide you through the process.
-
