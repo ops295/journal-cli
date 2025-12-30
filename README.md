@@ -100,3 +100,21 @@ Behavior of `--todos` mode:
   - any other input — leave the todo unchanged.
 
 Note: shells treat flags-without-values differently. Using `--todos ""` explicitly is reliable across shells to mean "today." If you prefer, I can add a separate boolean flag `--todo-mode` that always updates today's todos.
+
+## Keywords
+
+- journaling
+- daily-journal
+- cli
+- markdown
+- obsidian
+- productivity
+- templates
+- go
+
+## Contributing
+
+We welcome contributions! See `CONTRIBUTING.md` for guidelines on filing issues and submitting pull requests. Maintainers will review incoming PRs — the repository uses a review-first workflow and code owners to ensure one or more reviews are required before merging.
+
+If you'd like to help, open an issue or submit a draft PR and we will guide you through the process.
+
