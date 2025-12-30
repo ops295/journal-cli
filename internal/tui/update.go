@@ -173,52 +173,69 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.QuestionInput, cmd = m.QuestionInput.Update(msg)
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
-			// Navigate previous/next with Up/Down arrows
-			if (msg.String() == "up" || msg.String() == "k") && m.QuestionIndex > 0 {
-				// Save current answer first
+			// Shift+Tab => Next question (save current)
+			if msg.Type == tea.KeyShiftTab && !msg.Alt {
 				currentTemplate := m.Templates[m.TemplateCursor]
 				question := currentTemplate.Questions[m.QuestionIndex].Title
 				m.Entry.Questions[question] = m.QuestionInput.Value()
-				// Move back
-				m.QuestionIndex--
-				prevQ := currentTemplate.Questions[m.QuestionIndex].Title
-				m.QuestionInput.SetValue(m.Entry.Questions[prevQ])
-				m.QuestionInput.Focus()
-				return m, nil
-			}
-			if (msg.String() == "down" || msg.String() == "j") {
-				currentTemplate := m.Templates[m.TemplateCursor]
-				// Save current answer first
-				question := currentTemplate.Questions[m.QuestionIndex].Title
-				m.Entry.Questions[question] = m.QuestionInput.Value()
-				// Move forward if possible
-				if m.QuestionIndex < len(currentTemplate.Questions)-1 {
-					m.QuestionIndex++
-					nextQ := currentTemplate.Questions[m.QuestionIndex].Title
-					m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
-					m.QuestionInput.Focus()
-					return m, nil
-				}
-				// If at last question, treat Down as finish
-				m.Entry.Questions[question] = m.QuestionInput.Value()
-				m.CurrentStep = StepDone
-				return m, tea.Quit
-			}
-
-			// Use Ctrl+S or Ctrl+N to submit answer
-			if msg.Type == tea.KeyCtrlS || msg.Type == tea.KeyCtrlN {
-				// Save answer
-				currentTemplate := m.Templates[m.TemplateCursor]
-				question := currentTemplate.Questions[m.QuestionIndex].Title
-				m.Entry.Questions[question] = m.QuestionInput.Value()
-				
 				m.QuestionInput.Reset()
 				m.QuestionIndex++
-
 				if m.QuestionIndex >= len(currentTemplate.Questions) {
 					m.CurrentStep = StepDone
 					return m, tea.Quit
 				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
+				return m, nil
+			}
+
+			// Alt+Shift+Tab => Previous question (save current and load previous)
+			if msg.Type == tea.KeyShiftTab && msg.Alt {
+				if m.QuestionIndex > 0 {
+					currentTemplate := m.Templates[m.TemplateCursor]
+					question := currentTemplate.Questions[m.QuestionIndex].Title
+					m.Entry.Questions[question] = m.QuestionInput.Value()
+					m.QuestionIndex--
+					prevQ := currentTemplate.Questions[m.QuestionIndex].Title
+					m.QuestionInput.SetValue(m.Entry.Questions[prevQ])
+					m.QuestionInput.Focus()
+				}
+				return m, nil
+			}
+
+			// Enter => save current and advance
+			if msg.Type == tea.KeyEnter {
+				currentTemplate := m.Templates[m.TemplateCursor]
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				m.QuestionInput.Reset()
+				m.QuestionIndex++
+				if m.QuestionIndex >= len(currentTemplate.Questions) {
+					m.CurrentStep = StepDone
+					return m, tea.Quit
+				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
+				return m, nil
+			}
+
+			// Backwards compatible: Ctrl+S or Ctrl+N to submit answer
+			if msg.Type == tea.KeyCtrlS || msg.Type == tea.KeyCtrlN {
+				currentTemplate := m.Templates[m.TemplateCursor]
+				question := currentTemplate.Questions[m.QuestionIndex].Title
+				m.Entry.Questions[question] = m.QuestionInput.Value()
+				m.QuestionInput.Reset()
+				m.QuestionIndex++
+				if m.QuestionIndex >= len(currentTemplate.Questions) {
+					m.CurrentStep = StepDone
+					return m, tea.Quit
+				}
+				nextQ := currentTemplate.Questions[m.QuestionIndex].Title
+				m.QuestionInput.SetValue(m.Entry.Questions[nextQ])
+				m.QuestionInput.Focus()
+				return m, nil
 			}
 		}
 		return m, cmd
