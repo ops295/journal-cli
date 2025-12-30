@@ -1,0 +1,8 @@
+name: workday-balance
+description: Work reflection with wellbeing check
+questions:
+  - title: "😶‍🌫️ My dominant mood today"
+  - title: "⚙️ What consumed most of my time?"
+  - title: "🧱 What drained my energy?"
+  - title: "🔁 What helped me cope or stay balanced?"
+  - title: "➡️ One gentle intention for tomorrow"

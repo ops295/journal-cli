@@ -1,0 +1,15 @@
+name: daily-human-dev
+description: Human-first daily journal for developers
+questions:
+  - id: mood
+    title: "🧠 How am I feeling today (emotionally)?"
+  - id: energy
+    title: "⚡ How is my energy level today?"
+  - id: stress
+    title: "🌪️ What caused stress or mental friction today?"
+  - id: work
+    title: "💻 What did I work on or think about today?"
+  - id: progress
+    title: "🚀 One thing that moved me forward"
+  - id: gratitude
+    title: "🙏 One thing I’m grateful for today"
