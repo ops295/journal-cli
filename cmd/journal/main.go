@@ -15,6 +15,8 @@ func main() {
 	version := flag.Bool("version", false, "Show version")
 	todos := flag.String("todos", "", "Update todos for a date (YYYY-MM-DD). Empty = today")
 	todoFlag := flag.Bool("todo", false, "Update today's todos (shorthand for --todos \"\")")
+	setTemplate := flag.String("set-template", "", "Set default template")
+	listTemplates := flag.Bool("list-templates", false, "List available templates")
 
 	// Custom usage message
 	flag.Usage = func() {
@@ -29,7 +31,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  - Windows: %%APPDATA%%\\journal-cli\\config.yaml\n")
 		fmt.Fprintf(os.Stderr, "\n  Example config.yaml:\n")
 		fmt.Fprintf(os.Stderr, "    obsidian_vault: \"/Users/username/Documents/ObsidianVault\"\n")
-		fmt.Fprintf(os.Stderr, "    journal_dir: \"Journal/Daily\" # Relative to obsidian_vault\n\n")
+		fmt.Fprintf(os.Stderr, "    journal_dir: \"Journal/Daily\" # Relative to obsidian_vault\n")
+		fmt.Fprintf(os.Stderr, "    default_template: \"daily-human-dev\" # Optional\n\n")
 		fmt.Fprintf(os.Stderr, "Templates:\n")
 		fmt.Fprintf(os.Stderr, "  Templates are YAML files stored in the 'templates' subdirectory of the config folder.\n")
 		fmt.Fprintf(os.Stderr, "  Example template:\n")
@@ -38,6 +41,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "    questions:\n")
 		fmt.Fprintf(os.Stderr, "      - id: gratitude\n")
 		fmt.Fprintf(os.Stderr, "        title: \"What are you grateful for?\"\n")
+
+		fmt.Fprintf(os.Stderr, "\nTemplate Management:\n")
+		fmt.Fprintf(os.Stderr, "  Use --list-templates to see all available templates.\n")
+		fmt.Fprintf(os.Stderr, "  Use --set-template <name> to set a default template.\n")
+		fmt.Fprintf(os.Stderr, "  Examples:\n")
+		fmt.Fprintf(os.Stderr, "    ./journal --list-templates\n")
+		fmt.Fprintf(os.Stderr, "    ./journal --set-template daily-human-dev\n")
 
 		fmt.Fprintf(os.Stderr, "\nTodo updater:\n")
 		fmt.Fprintf(os.Stderr, "  Use --todos [YYYY-MM-DD] to run a quick CLI updater for todos (empty = today).\n")
@@ -55,6 +65,23 @@ func main() {
 
 	if *version {
 		fmt.Printf("journal-cli version %s\n", Version)
+		return
+	}
+
+	// Handle template management commands
+	if *listTemplates {
+		if err := app.ListTemplates(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error listing templates: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if *setTemplate != "" {
+		if err := app.SetDefaultTemplate(*setTemplate); err != nil {
+			fmt.Fprintf(os.Stderr, "Error setting template: %v\n", err)
+			os.Exit(1)
+		}
 		return
 	}
 

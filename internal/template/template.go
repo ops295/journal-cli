@@ -85,3 +85,47 @@ func LoadTemplates() ([]Template, error) {
 
 	return templates, nil
 }
+
+// ListTemplateNames returns a list of available template names
+func ListTemplateNames() ([]string, error) {
+	templates, err := LoadTemplates()
+	if err != nil {
+		return nil, err
+	}
+
+	names := make([]string, len(templates))
+	for i, t := range templates {
+		names[i] = t.Name
+	}
+	return names, nil
+}
+
+// TemplateExists checks if a template with the given name exists
+func TemplateExists(name string) (bool, error) {
+	templates, err := LoadTemplates()
+	if err != nil {
+		return false, err
+	}
+
+	for _, t := range templates {
+		if t.Name == name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// GetTemplateByName retrieves a specific template by name
+func GetTemplateByName(name string) (*Template, error) {
+	templates, err := LoadTemplates()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range templates {
+		if t.Name == name {
+			return &t, nil
+		}
+	}
+	return nil, nil
+}

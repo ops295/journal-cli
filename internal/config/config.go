@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	ObsidianVault string `yaml:"obsidian_vault"`
-	JournalDir    string `yaml:"journal_dir"` // Relative to ObsidianVault
+	ObsidianVault   string `yaml:"obsidian_vault"`
+	JournalDir      string `yaml:"journal_dir"` // Relative to ObsidianVault
+	DefaultTemplate string `yaml:"default_template"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -37,4 +38,25 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+// SaveConfig saves the configuration to the config file
+func SaveConfig(cfg *Config) error {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return err
+	}
+
+	journalConfigDir := filepath.Join(configDir, "journal-cli")
+	if err := os.MkdirAll(journalConfigDir, 0755); err != nil {
+		return err
+	}
+
+	configPath := filepath.Join(journalConfigDir, "config.yaml")
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(configPath, data, 0644)
 }
