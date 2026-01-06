@@ -125,6 +125,22 @@ Behavior of `--todos` mode:
 
 Note: shells treat flags-without-values differently. Using `--todos ""` explicitly is reliable across shells to mean "today." If you prefer, I can add a separate boolean flag `--todo-mode` that always updates today's todos.
 
+## Updates
+
+To update `journal-cli` to the latest version, run:
+
+```bash
+sudo ./journal self-update
+```
+
+This will:
+1. Validates the latest GitHub release.
+2. Downloads the binary for your OS/Arch.
+3. Replaces the current binary in-place.
+4. Preserves the old binary as `.bak` in case of failure.
+
+*Note: You may need `sudo` if the binary is installed in a protected directory.*
+
 ## Keywords
 
 - journaling

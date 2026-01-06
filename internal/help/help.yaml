@@ -1,7 +1,7 @@
 app:
   name: journal-cli
   description: A cross-platform terminal-based daily journaling application
-  version: 0.2.01
+  version: 0.2.02
 
 commands:
   - name: --help
@@ -13,26 +13,31 @@ commands:
   - name: --list-templates
     description: List available templates
     examples:
-      - ./journal --list-templates
+      - journal --list-templates
     
   - name: --set-template
     args: <name>
     description: Set default template
     examples:
-      - ./journal --set-template daily-human-dev
-      - ./journal --set-template gentle-day
+      - journal --set-template daily-human-dev
+      - journal --set-template gentle-day
     
   - name: --todo
     description: Update today's todos (shorthand)
     examples:
-      - ./journal --todo
+      - journal --todo
     
   - name: --todos
     args: "[YYYY-MM-DD]"
     description: Update todos for a date (empty = today)
     examples:
-      - ./journal --todos ""
-      - ./journal --todos 2025-12-30
+      - journal --todos ""
+      - journal --todos 2025-12-30
+
+  - name: self-update
+    description: Update journal to the latest version
+    examples:
+      - journal self-update
 
 configuration:
   title: Configuration
@@ -73,3 +78,8 @@ sections:
       - "Use --todos [YYYY-MM-DD] to update todos (empty = today)"
       - "Mark todos as complete, partial, or move to backlog"
       - "Use --todo as a shorthand for updating today's todos"
+
+  - title: Updates
+    description: Keep your journal CLI up to date
+    items:
+      - "Use `self-update` to download and install the latest version from GitHub."
