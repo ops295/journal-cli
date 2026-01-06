@@ -6,59 +6,35 @@ import (
 	"os"
 
 	"journal-cli/internal/app"
+	"journal-cli/internal/help"
 )
 
 const Version = "1.0.0"
 
 func main() {
-	help := flag.Bool("help", false, "Show help message")
+	helpFlag := flag.Bool("help", false, "Show help message")
 	version := flag.Bool("version", false, "Show version")
 	todos := flag.String("todos", "", "Update todos for a date (YYYY-MM-DD). Empty = today")
 	todoFlag := flag.Bool("todo", false, "Update today's todos (shorthand for --todos \"\")")
 	setTemplate := flag.String("set-template", "", "Set default template")
 	listTemplates := flag.Bool("list-templates", false, "List available templates")
 
-	// Custom usage message
+	// Custom usage message using YAML documentation
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "A cross-platform terminal-based daily journaling application.\n\n")
-		fmt.Fprintf(os.Stderr, "Options:\n")
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nConfiguration:\n")
-		fmt.Fprintf(os.Stderr, "  The application looks for a config.yaml file in:\n")
-		fmt.Fprintf(os.Stderr, "  - macOS:   ~/Library/Application Support/journal-cli/config.yaml\n")
-		fmt.Fprintf(os.Stderr, "  - Linux:   ~/.config/journal-cli/config.yaml\n")
-		fmt.Fprintf(os.Stderr, "  - Windows: %%APPDATA%%\\journal-cli\\config.yaml\n")
-		fmt.Fprintf(os.Stderr, "\n  Example config.yaml:\n")
-		fmt.Fprintf(os.Stderr, "    obsidian_vault: \"/Users/username/Documents/ObsidianVault\"\n")
-		fmt.Fprintf(os.Stderr, "    journal_dir: \"Journal/Daily\" # Relative to obsidian_vault\n")
-		fmt.Fprintf(os.Stderr, "    default_template: \"daily-human-dev\" # Optional\n\n")
-		fmt.Fprintf(os.Stderr, "Templates:\n")
-		fmt.Fprintf(os.Stderr, "  Templates are YAML files stored in the 'templates' subdirectory of the config folder.\n")
-		fmt.Fprintf(os.Stderr, "  Example template:\n")
-		fmt.Fprintf(os.Stderr, "    name: daily-reflection\n")
-		fmt.Fprintf(os.Stderr, "    description: A simple daily reflection\n")
-		fmt.Fprintf(os.Stderr, "    questions:\n")
-		fmt.Fprintf(os.Stderr, "      - id: gratitude\n")
-		fmt.Fprintf(os.Stderr, "        title: \"What are you grateful for?\"\n")
-
-		fmt.Fprintf(os.Stderr, "\nTemplate Management:\n")
-		fmt.Fprintf(os.Stderr, "  Use --list-templates to see all available templates.\n")
-		fmt.Fprintf(os.Stderr, "  Use --set-template <name> to set a default template.\n")
-		fmt.Fprintf(os.Stderr, "  Examples:\n")
-		fmt.Fprintf(os.Stderr, "    ./journal --list-templates\n")
-		fmt.Fprintf(os.Stderr, "    ./journal --set-template daily-human-dev\n")
-
-		fmt.Fprintf(os.Stderr, "\nTodo updater:\n")
-		fmt.Fprintf(os.Stderr, "  Use --todos [YYYY-MM-DD] to run a quick CLI updater for todos (empty = today).\n")
-		fmt.Fprintf(os.Stderr, "  Examples:\n")
-		fmt.Fprintf(os.Stderr, "    ./journal --todos \"\"    # update today's todos\n")
-		fmt.Fprintf(os.Stderr, "    ./journal --todos 2025-12-30  # update todos for that date\n")
+		helpDoc, err := help.LoadHelp()
+		if err != nil {
+			// Fallback if help loading fails
+			fmt.Fprintf(os.Stderr, "Error loading help documentation: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
+			flag.PrintDefaults()
+			return
+		}
+		fmt.Fprintln(os.Stderr, helpDoc.Render(os.Args[0]))
 	}
 
 	flag.Parse()
 
-	if *help {
+	if *helpFlag {
 		flag.Usage()
 		return
 	}
