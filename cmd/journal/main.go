@@ -9,7 +9,7 @@ import (
 	"journal-cli/internal/help"
 )
 
-const Version = "2.0.01"
+const Version = "0.2.01"
 
 func main() {
 	helpFlag := flag.Bool("help", false, "Show help message")
