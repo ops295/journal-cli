@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME=journal
-VERSION?=0.2.0
+VERSION?=0.2.01
 BUILD_DIR=bin
 MAIN_PATH=cmd/journal/main.go
 COVERAGE_FILE=coverage.out

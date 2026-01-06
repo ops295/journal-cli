@@ -137,6 +137,21 @@ func Run() {
 
 	model := tui.NewModel(cfg, templates, entry, s)
 
+	// If default template is configured and entry doesn't have a template yet, use the default
+	if cfg.DefaultTemplate != "" && entry.Template == "" {
+		// Find the default template in the list
+		for i, t := range templates {
+			if t.Name == cfg.DefaultTemplate {
+				model.TemplateCursor = i
+				entry.Template = cfg.DefaultTemplate
+				// Skip template selection and start at Mood input
+				model.CurrentStep = tui.StepMood
+				model.MoodInput.Focus()
+				break
+			}
+		}
+	}
+
 	// If we loaded an existing entry (from today's file), initialize the UI
 	// so user can edit rather than starting a fresh flow.
 	if entry != nil && entry.Template != "" {

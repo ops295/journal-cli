@@ -1,0 +1,75 @@
+app:
+  name: journal-cli
+  description: A cross-platform terminal-based daily journaling application
+  version: 0.2.01
+
+commands:
+  - name: --help
+    description: Show help message
+    
+  - name: --version
+    description: Show version
+    
+  - name: --list-templates
+    description: List available templates
+    examples:
+      - ./journal --list-templates
+    
+  - name: --set-template
+    args: <name>
+    description: Set default template
+    examples:
+      - ./journal --set-template daily-human-dev
+      - ./journal --set-template gentle-day
+    
+  - name: --todo
+    description: Update today's todos (shorthand)
+    examples:
+      - ./journal --todo
+    
+  - name: --todos
+    args: "[YYYY-MM-DD]"
+    description: Update todos for a date (empty = today)
+    examples:
+      - ./journal --todos ""
+      - ./journal --todos 2025-12-30
+
+configuration:
+  title: Configuration
+  description: The application looks for a config.yaml file in
+  locations:
+    - platform: macOS
+      path: "~/Library/Application Support/journal-cli/config.yaml"
+    - platform: Linux
+      path: "~/.config/journal-cli/config.yaml"
+    - platform: Windows
+      path: "%APPDATA%\\journal-cli\\config.yaml"
+  example: |
+    obsidian_vault: "/Users/username/Documents/ObsidianVault"
+    journal_dir: "Journal/Daily"
+    default_template: "daily-human-dev"
+
+templates:
+  title: Templates
+  description: Templates are YAML files stored in the 'templates' subdirectory of the config folder
+  example: |
+    name: daily-reflection
+    description: A simple daily reflection
+    questions:
+      - id: gratitude
+        title: "What are you grateful for?"
+
+sections:
+  - title: Template Management
+    description: Use template commands to manage your journaling templates
+    items:
+      - "Use --list-templates to see all available templates"
+      - "Use --set-template <name> to set a default template"
+      - "When set, the app skips template selection and starts at Mood input"
+  
+  - title: Todo Updater
+    description: Quick CLI updater for managing your daily todos
+    items:
+      - "Use --todos [YYYY-MM-DD] to update todos (empty = today)"
+      - "Mark todos as complete, partial, or move to backlog"
+      - "Use --todo as a shorthand for updating today's todos"

@@ -37,7 +37,9 @@ Place a `config.yaml` file in the config directory:
 ```yaml
 obsidian_vault: "/Users/username/Documents/ObsidianVault"
 journal_dir: "Journal/Daily" # Relative to obsidian_vault
+default_template: "daily-human-dev" # Optional: Set a default template
 ```
+
 
 ### templates
 The application looks for YAML template files in the `templates` subdirectory of the config directory:
@@ -55,6 +57,28 @@ questions:
   - id: energy
     title: "⚡ How is my energy level today?"
 ```
+
+### Template Management
+
+You can manage templates using command-line flags:
+
+**List available templates:**
+```bash
+./journal --list-templates
+```
+
+**Set a default template:**
+```bash
+./journal --set-template daily-human-dev
+```
+
+When a default template is set, the application will automatically use it and skip the template selection step, taking you directly to the Mood input.
+
+**Platform-specific examples:**
+- **macOS**: `./journal --set-template daily-human-dev`
+- **Linux**: `./journal --set-template daily-human-dev`
+- **Windows**: `journal.exe --set-template daily-human-dev`
+
 
 ## Usage
 1. Run the app.

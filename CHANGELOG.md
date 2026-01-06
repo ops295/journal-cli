@@ -10,6 +10,19 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 - Initial development items tracked here.
 
+## [0.2.01] - 2026-01-06
+
+### Added
+
+- Template management commands: `--set-template` and `--list-templates`
+- Enhanced help command (`--help`) with structured YAML documentation
+- Default template auto-selection capability
+- Configuration field `default_template` supported
+- Cross-platform support for config and template locations
+- `internal/help` package for structured documentation
+- Comprehensive tests for new help and template functionality
+
+
 ## [0.2.0] - 2025-12-30
 
 ### Changed
