@@ -134,7 +134,7 @@ sudo ./journal self-update
 ```
 
 This will:
-1. Validates the latest GitHub release.
+1. Validate the latest GitHub release.
 2. Downloads the binary for your OS/Arch.
 3. Replaces the current binary in-place.
 4. Preserves the old binary as `.bak` in case of failure.
