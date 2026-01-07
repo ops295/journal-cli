@@ -111,9 +111,6 @@ func Update() error {
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
 	
-	// Close the file explicitly before renaming to ensure all writes are flushed
-	out.Close()
-
 	// 4. Replace the current binary
 	current, err := os.Executable()
 	if err != nil {
