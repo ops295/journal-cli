@@ -26,3 +26,7 @@ go.work
 /journal
 
 /bin
+
+# Backup files
+*.bak
+*~
