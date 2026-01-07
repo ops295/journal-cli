@@ -32,7 +32,21 @@ func Update() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code from GitHub API: %d", resp.StatusCode)
+		// Provide clearer guidance about common GitHub API errors and include the response body.
+		msg := fmt.Sprintf("unexpected status code from GitHub API: %d", resp.StatusCode)
+
+		switch resp.StatusCode {
+		case http.StatusNotFound:
+			msg += " (latest release not found; check that the repository has a published release)"
+		case http.StatusForbidden:
+			msg += " (access forbidden or rate limited; you may have hit GitHub's API rate limit)"
+		}
+
+		if body, readErr := io.ReadAll(resp.Body); readErr == nil && len(body) > 0 {
+			msg += fmt.Sprintf(" - response body: %s", string(body))
+		}
+
+		return fmt.Errorf("%s", msg)
 	}
 
 	var release Release
