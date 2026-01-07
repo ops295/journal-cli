@@ -40,6 +40,6 @@ We will adopt a **Pragmatic Clean Architecture** style.
 -   **Coupling**: `internal/app` is coupled to concrete implementations of `fs` and `tui`.
 -   **Testing**: We cannot easily mock the FileSystem or TUI in integration tests without refactoring `app` to use interfaces.
 
-### mitigation
+### Mitigation
 -   We accept this coupling for now.
 -   If a component (like `fs`) becomes complex or needs interchangeable backends (e.g., S3 support), we will refactor it behind an interface at that time.
