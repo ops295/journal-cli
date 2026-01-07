@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -270,14 +271,7 @@ func TestUpdateWithHTTPErrors(t *testing.T) {
 
 				// Verify the error message contains expected text
 				if tt.wantErrContain != "" {
-					found := false
-					for _, substr := range []string{tt.wantErrContain} {
-						if contains(msg, substr) {
-							found = true
-							break
-						}
-					}
-					if !found {
+					if !strings.Contains(msg, tt.wantErrContain) {
 						t.Errorf("Error message %q does not contain %q", msg, tt.wantErrContain)
 					}
 				}
@@ -428,19 +422,4 @@ func TestUpdateBinaryPermissions(t *testing.T) {
 	if mode.Perm() != 0755 {
 		t.Errorf("File permissions = %o, want 0755", mode.Perm())
 	}
-}
-
-// contains is a helper function to check if a string contains a substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
-		(len(s) > 0 && len(substr) > 0 && containsHelper(s, substr)))
-}
-
-func containsHelper(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
