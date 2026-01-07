@@ -10,6 +10,14 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 - Initial development items tracked here.
 
+## [0.2.02] - 2026-01-06
+
+### Added
+
+- `self-update` command to update the CLI directly from GitHub Releases.
+- `make bump-version` command to automate version updates across files.
+- Documentation for the update command in `README.md` and standard help output.
+
 ## [0.2.01] - 2026-01-06
 
 ### Added

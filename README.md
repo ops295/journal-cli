@@ -125,6 +125,22 @@ Behavior of `--todos` mode:
 
 Note: shells treat flags-without-values differently. Using `--todos ""` explicitly is reliable across shells to mean "today." If you prefer, I can add a separate boolean flag `--todo-mode` that always updates today's todos.
 
+## Updates
+
+To update `journal-cli` to the latest version, run:
+
+```bash
+sudo ./journal self-update
+```
+
+This will:
+1. Validate the latest GitHub release.
+2. Downloads the binary for your OS/Arch.
+3. Replaces the current binary in-place.
+4. Preserves the old binary as `.bak` in case of failure.
+
+*Note: You may need `sudo` if the binary is installed in a protected directory.*
+
 ## Keywords
 
 - journaling
@@ -141,3 +157,10 @@ Note: shells treat flags-without-values differently. Using `--todos ""` explicit
 We welcome contributions! See `CONTRIBUTING.md` for guidelines on filing issues and submitting pull requests. Maintainers will review incoming PRs — the repository uses a review-first workflow and code owners to ensure one or more reviews are required before merging.
 
 If you'd like to help, open an issue or submit a draft PR and we will guide you through the process.
+
+## Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [ADR 001: Pragmatic Clean Architecture](docs/adr/001-pragmatic-clean-architecture.md)
+- [Feature: Self-Update](docs/features/self-update.md)
+- [Feature: Templates](docs/features/templates.md)

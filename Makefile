@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME=journal
-VERSION?=0.2.01
+VERSION?=0.2.02
 BUILD_DIR=bin
 MAIN_PATH=cmd/journal/main.go
 COVERAGE_FILE=coverage.out
@@ -103,3 +103,11 @@ vet: ## Run go vet
 	@echo "Running go vet..."
 	go vet ./...
 	@echo "Vet complete!"
+
+bump-version: ## Bump version (usage: make bump-version v=1.0.0)
+	@if [ -z "$(v)" ]; then echo "Usage: make bump-version v=x.y.z"; exit 1; fi
+	@echo "Bumping version to $(v)..."
+	@sed -i.bak 's/^VERSION?=.*/VERSION?=$(v)/' Makefile && rm Makefile.bak
+	@sed -i.bak 's/const Version = .*/const Version = "$(v)"/' $(MAIN_PATH) && rm $(MAIN_PATH).bak
+	@sed -i.bak 's/version: .*/version: $(v)/' internal/help/help.yaml && rm internal/help/help.yaml.bak
+	@echo "Version bumped to $(v)"

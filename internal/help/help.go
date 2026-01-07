@@ -133,6 +133,15 @@ func (h *HelpDoc) Render(programName string) string {
 					}
 				}
 			}
+		} else if section.Title == "Updates" {
+			sb.WriteString("  Examples:\n")
+			for _, cmd := range h.Commands {
+				if strings.Contains(cmd.Name, "update") && len(cmd.Examples) > 0 {
+					for _, ex := range cmd.Examples {
+						sb.WriteString(fmt.Sprintf("    %s\n", ex))
+					}
+				}
+			}
 		}
 	}
 

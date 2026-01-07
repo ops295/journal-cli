@@ -7,11 +7,21 @@ import (
 
 	"journal-cli/internal/app"
 	"journal-cli/internal/help"
+	"journal-cli/internal/updater"
 )
 
-const Version = "0.2.01"
+const Version = "0.2.02"
 
 func main() {
+	// Check for "self-update" subcommand
+	if len(os.Args) > 1 && os.Args[1] == "self-update" {
+		if err := updater.Update(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error updating: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	helpFlag := flag.Bool("help", false, "Show help message")
 	version := flag.Bool("version", false, "Show version")
 	todos := flag.String("todos", "", "Update todos for a date (YYYY-MM-DD). Empty = today")

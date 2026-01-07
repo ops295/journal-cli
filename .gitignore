@@ -23,4 +23,10 @@ go.work
 .DS_Store
 
 # Project specific
-journal
+/journal
+
+/bin
+
+# Backup files
+*.bak
+*~
