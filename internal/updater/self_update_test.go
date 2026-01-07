@@ -251,36 +251,48 @@ func TestFindAssetURL(t *testing.T) {
 	tests := []struct {
 		name        string
 		targetName  string
+		goos        string
+		goarch      string
 		expectError bool
 		expectedURL string
 	}{
 		{
 			name:        "Linux AMD64 found",
 			targetName:  "journal-linux-amd64",
+			goos:        "linux",
+			goarch:      "amd64",
 			expectError: false,
 			expectedURL: "https://example.com/journal-linux-amd64",
 		},
 		{
 			name:        "Darwin ARM64 found",
 			targetName:  "journal-darwin-arm64",
+			goos:        "darwin",
+			goarch:      "arm64",
 			expectError: false,
 			expectedURL: "https://example.com/journal-darwin-arm64",
 		},
 		{
 			name:        "Windows AMD64 found",
 			targetName:  "journal-windows-amd64.exe",
+			goos:        "windows",
+			goarch:      "amd64",
 			expectError: false,
 			expectedURL: "https://example.com/journal-windows-amd64.exe",
 		},
 		{
 			name:        "Unsupported platform",
 			targetName:  "journal-freebsd-386",
+			goos:        "freebsd",
+			goarch:      "386",
 			expectError: true,
 			expectedURL: "",
 		},
 		{
 			name:        "Non-binary asset",
 			targetName:  "checksums.txt",
+			goos:        "linux",
+			goarch:      "amd64",
 			expectError: false,
 			expectedURL: "https://example.com/checksums.txt",
 		},
@@ -288,7 +300,7 @@ func TestFindAssetURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			url, err := findAssetURL(release, tt.targetName)
+			url, err := findAssetURL(release, tt.targetName, tt.goos, tt.goarch)
 
 			if tt.expectError {
 				if err == nil {
@@ -296,6 +308,10 @@ func TestFindAssetURL(t *testing.T) {
 				}
 				if url != "" {
 					t.Errorf("Expected empty URL but got: %v", url)
+				}
+				// Verify error message includes OS/arch info
+				if !strings.Contains(err.Error(), tt.goos) || !strings.Contains(err.Error(), tt.goarch) {
+					t.Errorf("Error message should include OS/arch info, got: %v", err.Error())
 				}
 				return
 			}
@@ -322,7 +338,7 @@ func TestFindAssetURLEmptyRelease(t *testing.T) {
 		}{},
 	}
 
-	url, err := findAssetURL(release, "journal-linux-amd64")
+	url, err := findAssetURL(release, "journal-linux-amd64", "linux", "amd64")
 	if err == nil {
 		t.Errorf("Expected error for empty release but got none")
 	}
@@ -331,6 +347,9 @@ func TestFindAssetURLEmptyRelease(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "no compatible binary found") {
 		t.Errorf("Error message should mention 'no compatible binary found', got: %v", err.Error())
+	}
+	if !strings.Contains(err.Error(), "linux/amd64") {
+		t.Errorf("Error message should include OS/arch info, got: %v", err.Error())
 	}
 }
 
@@ -361,9 +380,14 @@ func TestBinaryPermissions(t *testing.T) {
 	mode := info.Mode()
 	expectedPerm := os.FileMode(0755)
 	
-	// On Windows, permissions work differently
-	if mode.Perm() != expectedPerm && mode.Perm()&0111 == 0 {
-		t.Errorf("File should be executable. Permissions = %o, want %o", mode.Perm(), expectedPerm)
+	// Note: On Unix-like systems, we expect exact 0755 permissions.
+	// On Windows, the permission system works differently and we just verify
+	// the file has some executable bits set (mode & 0111 != 0).
+	if mode.Perm() != expectedPerm {
+		// If not exact match, at least verify file has executable bits on Windows
+		if mode.Perm()&0111 == 0 {
+			t.Errorf("File should be executable. Permissions = %o, want at least some executable bits set", mode.Perm())
+		}
 	}
 }
 

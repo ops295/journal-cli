@@ -30,13 +30,13 @@ func getBinaryName(goos, goarch string) string {
 }
 
 // findAssetURL searches for a compatible binary in the release assets
-func findAssetURL(release *Release, targetName string) (string, error) {
+func findAssetURL(release *Release, targetName, goos, goarch string) (string, error) {
 	for _, asset := range release.Assets {
 		if asset.Name == targetName {
 			return asset.BrowserDownloadURL, nil
 		}
 	}
-	return "", fmt.Errorf("no compatible binary found (looking for %s)", targetName)
+	return "", fmt.Errorf("no compatible binary found for %s/%s (looking for %s)", goos, goarch, targetName)
 }
 
 // Update handles the self-update process
@@ -76,9 +76,9 @@ func Update() error {
 	// 2. Determine target binary name
 	target := getBinaryName(runtime.GOOS, runtime.GOARCH)
 
-	url, err := findAssetURL(&release, target)
+	url, err := findAssetURL(&release, target, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
-		return fmt.Errorf("no compatible binary found for %s/%s (looking for %s)", runtime.GOOS, runtime.GOARCH, target)
+		return err
 	}
 
 	fmt.Printf("⬇️  Downloading %s (%s)...\n", release.TagName, target)
