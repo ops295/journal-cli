@@ -61,7 +61,7 @@ func Update() error {
 		runtime.GOOS,
 		runtime.GOARCH,
 	)
-	
+
 	// Windows binaries usually have .exe extension
 	if runtime.GOOS == "windows" {
 		target += ".exe"
@@ -85,7 +85,7 @@ func Update() error {
 	tmpFile := filepath.Join(os.TempDir(), "journal-new")
 	// Ensure we don't conflict if multiple runs or stale files
 	_ = os.Remove(tmpFile)
-	
+
 	out, err := os.Create(tmpFile)
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
@@ -110,20 +110,20 @@ func Update() error {
 	if err := out.Chmod(0755); err != nil {
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
-	
+
 	// 4. Replace the current binary
 	current, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("failed to locate current executable: %w", err)
 	}
-	
+
 	// Resolve symlinks if any (common in some installs), though os.Executable usually handles this.
 	// We'll stick to what os.Executable returns for now.
 
 	backup := current + ".bak"
 
 	fmt.Println("🔄 Replacing binary...")
-	
+
 	// First move the current binary to .bak
 	if err := os.Rename(current, backup); err != nil {
 		// If permission denied, give a helpful hint
@@ -139,7 +139,7 @@ func Update() error {
 		_ = os.Rename(backup, current)
 		return fmt.Errorf("failed to install new binary: %w", err)
 	}
-	
+
 	// Cleanup backup
 	_ = os.Remove(backup)
 
