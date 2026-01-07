@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 const repo = "ops295/journal-cli"
@@ -24,8 +25,13 @@ type Release struct {
 func Update() error {
 	fmt.Println("🔍 Checking latest version...")
 
+	// Create HTTP client with timeout to prevent indefinite hangs
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
 	// 1. Fetch latest release info
-	resp, err := http.Get("https://api.github.com/repos/" + repo + "/releases/latest")
+	resp, err := client.Get("https://api.github.com/repos/" + repo + "/releases/latest")
 	if err != nil {
 		return fmt.Errorf("failed to fetch latest release: %w", err)
 	}
@@ -92,7 +98,7 @@ func Update() error {
 	}
 	defer out.Close()
 
-	respBin, err := http.Get(url)
+	respBin, err := client.Get(url)
 	if err != nil {
 		return fmt.Errorf("failed to download binary: %w", err)
 	}
