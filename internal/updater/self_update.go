@@ -20,6 +20,25 @@ type Release struct {
 	} `json:"assets"`
 }
 
+// getBinaryName returns the expected binary name for the given OS and architecture
+func getBinaryName(goos, goarch string) string {
+	target := fmt.Sprintf("journal-%s-%s", goos, goarch)
+	if goos == "windows" {
+		target += ".exe"
+	}
+	return target
+}
+
+// findAssetURL searches for a compatible binary in the release assets
+func findAssetURL(release *Release, targetName string) (string, error) {
+	for _, asset := range release.Assets {
+		if asset.Name == targetName {
+			return asset.BrowserDownloadURL, nil
+		}
+	}
+	return "", fmt.Errorf("no compatible binary found (looking for %s)", targetName)
+}
+
 // Update handles the self-update process
 func Update() error {
 	fmt.Println("🔍 Checking latest version...")
@@ -55,27 +74,10 @@ func Update() error {
 	}
 
 	// 2. Determine target binary name
-	// Naming convention assumed: journal-darwin-arm64, journal-linux-amd64, etc.
-	target := fmt.Sprintf(
-		"journal-%s-%s",
-		runtime.GOOS,
-		runtime.GOARCH,
-	)
-	
-	// Windows binaries usually have .exe extension
-	if runtime.GOOS == "windows" {
-		target += ".exe"
-	}
+	target := getBinaryName(runtime.GOOS, runtime.GOARCH)
 
-	var url string
-	for _, asset := range release.Assets {
-		if asset.Name == target {
-			url = asset.BrowserDownloadURL
-			break
-		}
-	}
-
-	if url == "" {
+	url, err := findAssetURL(&release, target)
+	if err != nil {
 		return fmt.Errorf("no compatible binary found for %s/%s (looking for %s)", runtime.GOOS, runtime.GOARCH, target)
 	}
 
