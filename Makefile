@@ -107,7 +107,7 @@ vet: ## Run go vet
 bump-version: ## Bump version (usage: make bump-version v=1.0.0)
 	@if [ -z "$(v)" ]; then echo "Usage: make bump-version v=x.y.z"; exit 1; fi
 	@echo "Bumping version to $(v)..."
-	@sed -i '' 's/VERSION?=0.2.02
-	@sed -i '' 's/const Version = .*/const Version = "$(v)"/' $(MAIN_PATH)
-	@sed -i '' 's/version: .*/version: $(v)/' internal/help/help.yaml
+	@sed -i.bak 's/^VERSION?=.*/VERSION?=$(v)/' Makefile && rm Makefile.bak
+	@sed -i.bak 's/const Version = .*/const Version = "$(v)"/' $(MAIN_PATH) && rm $(MAIN_PATH).bak
+	@sed -i.bak 's/version: .*/version: $(v)/' internal/help/help.yaml && rm internal/help/help.yaml.bak
 	@echo "Version bumped to $(v)"
