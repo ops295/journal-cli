@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"journal-cli/internal/version"
 )
 
 const repo = "ops295/journal-cli"
@@ -25,7 +27,13 @@ func Update() error {
 	fmt.Println("🔍 Checking latest version...")
 
 	// 1. Fetch latest release info
-	resp, err := http.Get("https://api.github.com/repos/" + repo + "/releases/latest")
+	req, err := http.NewRequest("GET", "https://api.github.com/repos/"+repo+"/releases/latest", nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("User-Agent", "journal-cli/"+version.GetVersion())
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to fetch latest release: %w", err)
 	}
@@ -92,7 +100,13 @@ func Update() error {
 	}
 	defer out.Close()
 
-	respBin, err := http.Get(url)
+	reqBin, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create download request: %w", err)
+	}
+	reqBin.Header.Set("User-Agent", "journal-cli/"+version.GetVersion())
+
+	respBin, err := http.DefaultClient.Do(reqBin)
 	if err != nil {
 		return fmt.Errorf("failed to download binary: %w", err)
 	}
