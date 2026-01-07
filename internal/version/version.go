@@ -28,4 +28,3 @@ func GetVersionString() string {
 	}
 	return fmt.Sprintf("v%s", Version)
 }
-

@@ -14,7 +14,7 @@ func TestGetVersion(t *testing.T) {
 
 func TestGetBuildInfo(t *testing.T) {
 	info := GetBuildInfo()
-	
+
 	// Should contain all three components
 	if !strings.Contains(info, "Version:") {
 		t.Error("GetBuildInfo() missing Version field")
@@ -53,7 +53,7 @@ func TestGetVersionString(t *testing.T) {
 
 			// Set test version
 			Version = tt.version
-			
+
 			result := GetVersionString()
 			if result != tt.expected {
 				t.Errorf("GetVersionString() = %v, want %v", result, tt.expected)
