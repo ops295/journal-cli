@@ -20,7 +20,11 @@ jobs:
       - name: Get Version from Makefile
         id: get_version
         run: |
-          VERSION=$(grep "VERSION?=" Makefile | cut -d'=' -f2)
+          VERSION=$(grep "VERSION?=" Makefile | cut -d'=' -f2 | tr -d ' ')
+          if [[ -z "$VERSION" ]]; then
+            echo "Error: VERSION is empty"
+            exit 1
+          fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Detected version: $VERSION"
 
