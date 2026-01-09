@@ -164,3 +164,4 @@ If you'd like to help, open an issue or submit a draft PR and we will guide you 
 - [ADR 001: Pragmatic Clean Architecture](docs/adr/001-pragmatic-clean-architecture.md)
 - [Feature: Self-Update](docs/features/self-update.md)
 - [Feature: Templates](docs/features/templates.md)
+- [Feature: HTML Preview (Planned)](docs/features/html-preview.md)

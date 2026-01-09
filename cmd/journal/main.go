@@ -19,6 +19,18 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Error updating: %v\n", err)
 			os.Exit(1)
 		}
+	}
+
+	// Check for "preview" subcommand
+	if len(os.Args) > 1 && os.Args[1] == "preview" {
+		dateStr := ""
+		if len(os.Args) > 2 {
+			dateStr = os.Args[2]
+		}
+		if err := app.PreviewEntry(dateStr); err != nil {
+			fmt.Fprintf(os.Stderr, "Error previewing entry: %v\n", err)
+			os.Exit(1)
+		}
 		return
 	}
 
