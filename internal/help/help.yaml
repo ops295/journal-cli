@@ -1,7 +1,7 @@
 app:
   name: journal-cli
   description: A cross-platform terminal-based daily journaling application
-  version: 0.2.02
+  version: 0.2.03
 
 commands:
   - name: --help
@@ -33,6 +33,19 @@ commands:
     examples:
       - journal --todos ""
       - journal --todos 2025-12-30
+
+  - name: --notification
+    args: "[daily [HH:MM] | off]"
+    description: Manage daily notifications
+    examples:
+      - journal --notification daily
+      - journal --notification daily 09:00
+      - journal --notification off
+
+  - name: --show-notification
+    description: Show current notification settings
+    examples:
+      - journal --show-notification
 
   - name: self-update
     description: Update journal to the latest version
@@ -83,3 +96,11 @@ sections:
     description: Keep your journal CLI up to date
     items:
       - "Use `self-update` to download and install the latest version from GitHub."
+
+  - title: Notifications
+    description: Set up daily reminders to write in your journal
+    items:
+      - "Use --notification daily [HH:MM] to enable daily notifications (default: 09:00)"
+      - "Use --notification off to disable notifications"
+      - "Use --show-notification to view current notification settings"
+      - "Note: Requires manual system scheduler setup (launchd/cron/Task Scheduler)"

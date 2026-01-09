@@ -10,6 +10,16 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 - Initial development items tracked here.
 
+## [0.2.03] - 2026-01-09
+
+### Added
+
+- Daily notification commands: `--notification daily [HH:MM]`, `--notification off`, `--show-notification`, and `--trigger-notification`
+- Cross-platform OS notification support (macOS, Linux, Windows)
+- New `--config` command to display configuration file path and content
+- Comprehensive test suite for notification and configuration functionality
+- Documentation for notification and configuration commands in help system
+
 ## [0.2.02] - 2026-01-06
 
 ### Added
