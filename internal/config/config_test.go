@@ -13,6 +13,7 @@ func TestLoadConfigDefaultWhenMissing(t *testing.T) {
 	// Set HOME/XDG_CONFIG_HOME for deterministic UserConfigDir resolution
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	cfg, err := LoadConfig()
 	if err != nil {
@@ -28,6 +29,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Determine where the system expects the config to be
 	userConfigDir, err := os.UserConfigDir()
@@ -60,6 +62,7 @@ func TestSaveConfig(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	cfg := &Config{
 		ObsidianVault:   "/tmp/vault",
@@ -86,6 +89,7 @@ func TestLoadConfigWithDefaultTemplate(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	userConfigDir, err := os.UserConfigDir()
 	if err != nil {

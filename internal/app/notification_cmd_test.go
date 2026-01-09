@@ -12,6 +12,7 @@ func TestSetNotification(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Test enabling daily notification at a specific time
 	err := SetNotification("daily", "14:30")
@@ -46,6 +47,7 @@ func TestSetNotificationDefaultTime(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Test enabling daily notification without specifying time
 	err := SetNotification("daily", "")
@@ -68,6 +70,7 @@ func TestSetNotificationInvalidTime(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Test set with invalid time formats
 	invalidTimes := []string{"25:00", "12:60", "9:00", "noon", "12-00"}
@@ -83,6 +86,7 @@ func TestDisableNotification(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Enable first
 	err := SetNotification("daily", "09:00")
@@ -111,6 +115,7 @@ func TestShowNotificationStatus(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Should not error even if no config
 	err := ShowNotificationStatus()
@@ -130,6 +135,7 @@ func TestShowConfig(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Create a dummy config file
 	err := os.MkdirAll(filepath.Join(tmp, ".config", "journal-cli"), 0755)
