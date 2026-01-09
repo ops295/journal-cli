@@ -8,9 +8,17 @@ import (
 )
 
 type Config struct {
-	ObsidianVault   string `yaml:"obsidian_vault"`
-	JournalDir      string `yaml:"journal_dir"` // Relative to ObsidianVault
-	DefaultTemplate string `yaml:"default_template"`
+	ObsidianVault   string        `yaml:"obsidian_vault"`
+	JournalDir      string        `yaml:"journal_dir"` // Relative to ObsidianVault
+	DefaultTemplate string        `yaml:"default_template"`
+	Notification    *Notification `yaml:"notification,omitempty"`
+}
+
+// Notification holds notification settings
+type Notification struct {
+	Enabled   bool   `yaml:"enabled"`
+	Frequency string `yaml:"frequency"` // "daily" for now
+	Time      string `yaml:"time"`      // HH:MM format (24-hour)
 }
 
 func LoadConfig() (*Config, error) {
@@ -59,4 +67,13 @@ func SaveConfig(cfg *Config) error {
 	}
 
 	return os.WriteFile(configPath, data, 0644)
+}
+
+// GetConfigPath returns the path to the configuration file
+func GetConfigPath() (string, error) {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, "journal-cli", "config.yaml"), nil
 }

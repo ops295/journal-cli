@@ -15,6 +15,7 @@ func TestSetDefaultTemplate(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Ensure templates are loaded (creates defaults)
 	_, err := template.LoadTemplates()
@@ -43,6 +44,7 @@ func TestSetDefaultTemplateInvalid(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Ensure templates are loaded
 	_, err := template.LoadTemplates()
@@ -61,6 +63,7 @@ func TestGetDefaultTemplate(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Create config with default template
 	userConfigDir, err := os.UserConfigDir()
@@ -98,6 +101,7 @@ func TestListTemplatesCommand(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
 	t.Setenv("XDG_CONFIG_HOME", tmp)
+	t.Setenv("APPDATA", tmp)
 
 	// Ensure templates are loaded
 	_, err := template.LoadTemplates()
